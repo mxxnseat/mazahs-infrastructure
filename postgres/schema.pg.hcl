@@ -17,13 +17,13 @@ table "songs" {
             generated = "ALWAYS"
         }
     }
-    column "name" {
-        null = false
-        type = character_varying
-    }
     column "url" {
         null = false
-        type = text
+        type = varchar(512)
+    }
+    column "audio_file_path" {
+        null = false
+        type = varchar(64)
     }
     column "status" {
         null = false
@@ -32,10 +32,6 @@ table "songs" {
     }
     primary_key {
         columns = [column.id]
-    }
-
-    index "idx_songs_name" {
-        columns = [column.name]
     }
 
     index "idx_songs_status" {
