@@ -1,0 +1,27 @@
+dev/connect/plugins
+
+# Terraform core
+.terraform/
+
+# State files (VERY important)
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config (credentials, etc.)
+.terraformrc
+terraform.rc
+
+# Plan output
+*.tfplan
+
+# macOS / misc
+.DS_Store

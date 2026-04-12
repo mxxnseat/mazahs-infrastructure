@@ -1,0 +1,30 @@
+FROM alpine:3.23
+
+WORKDIR /workspace
+
+RUN apk add --no-cache \
+    bash \
+    curl \
+    unzip \
+    ca-certificates \
+    postgresql18-client
+
+# Install Atlas
+RUN curl -sSf https://atlasgo.sh | sh \
+    && atlas version
+
+# Install Terraform
+ARG TERRAFORM_VERSION=1.14.8
+RUN curl -fsSLo /tmp/terraform.zip \
+      "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+    && unzip /tmp/terraform.zip -d /usr/local/bin \
+    && rm /tmp/terraform.zip \
+    && terraform version
+
+COPY ./dev/init.sh /workspace/dev/init.sh
+COPY ./postgres/ /workspace/postgres/
+COPY ./terraform/ /workspace/terraform/
+
+RUN chmod +x /workspace/dev/init.sh
+
+ENTRYPOINT ["/bin/bash", "/workspace/dev/init.sh"]
