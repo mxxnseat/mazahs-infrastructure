@@ -8,36 +8,49 @@ until curl -s http://connect:8083/connectors; do
 done
 
 echo "Kafka Connect is ready"
-
 echo "Creating connector..."
 
 curl -X POST http://connect:8083/connectors \
   -H 'Content-Type: application/json' \
-  -d '{
-    "name": "postgres-cdc",
-    "config": {
-      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-      "tasks.max": "1",
+  --data @- <<'EOF'
+{
+  "name": "postgres-cdc",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
 
-      "database.hostname": "postgres",
-      "database.port": "5432",
-      "database.user": "debezium",
-      "database.password": "dbz",
-      "database.dbname": "shazam",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "debezium",
+    "database.password": "dbz",
+    "database.dbname": "shazam",
 
-      "topic.prefix": "dbserver1",
+    "topic.prefix": "dbserver1",
+    "plugin.name": "pgoutput",
 
-      "plugin.name": "pgoutput",
+    "slot.name": "debezium_slot",
+    "publication.name": "debezium_pub",
+    "publication.autocreate.mode": "disabled",
 
-      "slot.name": "debezium_slot",
-      "publication.name": "debezium_pub",
-      "publication.autocreate.mode": "disabled",
+    "table.include.list": "public.songs",
+    "schema.include.list": "public",
 
-      "table.include.list": "public.songs",
+    "snapshot.mode": "initial",
 
-      "schema.include.list": "public",
+    "transforms": "rename,route,unwrap",
 
-      "snapshot.mode": "initial"
-    }
-  }'
+    "transforms.rename.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.rename.regex": "dbserver1\\.public\\.(.*)",
+    "transforms.rename.replacement": "$1",
+
+    "transforms.route.type": "io.debezium.transforms.ContentBasedRouter",
+    "transforms.route.language": "jsr223.groovy",
+    "transforms.route.topic.expression": "value.op == 'r' ? topic + '.snapshot' : value.op == 'c' ? topic + '.created' : value.op == 'u' ? topic + '.updated' : value.op == 'd' ? topic + '.deleted' : topic",
+
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.delete.tombstone.handling.mode": "rewrite"
+  }
+}
+EOF
+
 echo "Done"

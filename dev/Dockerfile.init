@@ -21,6 +21,7 @@ RUN curl -fsSLo /tmp/terraform.zip \
     && rm /tmp/terraform.zip \
     && terraform version
 
+# TODO: Move it to the docker-compose.yml volume
 COPY ./dev/init.sh /workspace/dev/init.sh
 COPY ./postgres/ /workspace/postgres/
 COPY ./terraform/ /workspace/terraform/

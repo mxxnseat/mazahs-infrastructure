@@ -9,5 +9,5 @@ terraform {
 
 provider "kafka" {
   bootstrap_servers = var.bootstrap_servers
-  tls_enabled = var.tls_enabled
+  tls_enabled       = var.tls_enabled
 }
