@@ -58,3 +58,13 @@ export TF_VAR_bootstrap_servers='["kafka:9092"]'
 
 terraform -chdir=./terraform/kafka init
 terraform -chdir=./terraform/kafka apply -var-file=env/local.tfvars -auto-approve
+
+
+echo "Apply rabbitmq terraform"
+export TF_VAR_endpoint='http://rabbitmq:15672'
+
+terraform -chdir=./terraform/rabbitmq init
+terraform -chdir=./terraform/rabbitmq apply -var-file=env/local.tfvars -auto-approve
+
+
+echo "Terraform applied successfully."

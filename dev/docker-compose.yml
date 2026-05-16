@@ -80,9 +80,7 @@ services:
     restart: "no"
 
   connect:
-    build:
-      context: ./connect
-    container_name: connect
+    image: quay.io/debezium/connect:3.4.3
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,26 +91,26 @@ services:
     ports:
       - "8083:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
-      CONNECT_GROUP_ID: connect-cluster-1
-
-      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "true"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
-
-      CONNECT_REST_ADVERTISED_HOST_NAME: connect
-      CONNECT_PLUGIN_PATH: /opt/connect-plugins
-
-      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      BOOTSTRAP_SERVERS: kafka:9092
+      CONFIG_STORAGE_TOPIC: connect-configs
+      OFFSET_STORAGE_TOPIC: connect-offsets
+      STATUS_STORAGE_TOPIC: connect-status
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      ENABLE_DEBEZIUM_SCRIPTING: "true"
+      ADVERTISED_HOST_NAME: connect
+      OFFSET_FLUSH_INTERVAL_MS: 10000
+      CONNECT__KEY_CONVERTER_SCHEMAS_ENABLE: "true"
+      CONNECT__VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/connectors"]
       interval: 5s
       timeout: 5s
       retries: 20
     volumes:
-      - ./connect/plugins:/opt/connect-plugins
+      - ./connect/plugins:/kafka/connect
 
   connect-init:
     image: curlimages/curl:latest
@@ -123,3 +121,17 @@ services:
       - ./connect/scripts:/scripts
     entrypoint: ["/bin/sh", "/scripts/init-connect.sh"]
     restart: "no"
+
+  rabbitmq:
+    image: rabbitmq:4.2.5-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
